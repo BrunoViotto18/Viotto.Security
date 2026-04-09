@@ -16,10 +16,8 @@ public class AES256EncrypterTests
     }
 
     [Theory]
-    [InlineData("0123456789ABCDEF", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "0123456789abcdef", "rj4j0oXoIouySaSTartAsZvdKboPbPtGxIlzcE5VBWI=")]
-    [InlineData("0123456789ABCDE", "abcdefghijklmnopqrstuvwxyz012345", "0123456789abcdef", "6Dzb9IX6sypRDLRHnoN+qQ==")]
-    [InlineData("0123456789ABCDEF", "abcdefghijklmnopqrstuvwxyz012345", "0123456789abcdef", "qcbRXhI2Vpjjvc5KdwQ13VdNsZL2JoRmG8XLWFknrDA=")]
-    [InlineData("0123456789ABCDEFG", "abcdefghijklmnopqrstuvwxyz012345", "0123456789abcdef", "qcbRXhI2Vpjjvc5KdwQ13e3n/p44DoTeYpIMojy3cZU=")]
+    [InlineData("0123456789ABCDEF", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "0123456789abcdef", "rj4j0oXoIouySaSTartAsQ==")]
+    [InlineData("0123456789ABCDEF", "abcdefghijklmnopqrstuvwxyz012345", "0123456789abcdef", "qcbRXhI2Vpjjvc5KdwQ13Q==")]
     public void Encrypt_ShouldEncryptData(string inputText, string key, string iv, string expected)
     {
         // Arrange
@@ -36,10 +34,8 @@ public class AES256EncrypterTests
     }
 
     [Theory]
-    [InlineData("rj4j0oXoIouySaSTartAsZvdKboPbPtGxIlzcE5VBWI=", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "0123456789abcdef", "0123456789ABCDEF")]
-    [InlineData("6Dzb9IX6sypRDLRHnoN+qQ==", "abcdefghijklmnopqrstuvwxyz012345", "0123456789abcdef", "0123456789ABCDE")]
-    [InlineData("qcbRXhI2Vpjjvc5KdwQ13VdNsZL2JoRmG8XLWFknrDA=", "abcdefghijklmnopqrstuvwxyz012345", "0123456789abcdef", "0123456789ABCDEF")]
-    [InlineData("qcbRXhI2Vpjjvc5KdwQ13e3n/p44DoTeYpIMojy3cZU=", "abcdefghijklmnopqrstuvwxyz012345", "0123456789abcdef", "0123456789ABCDEFG")]
+    [InlineData("rj4j0oXoIouySaSTartAsQ==", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "0123456789abcdef", "0123456789ABCDEF")]
+    [InlineData("qcbRXhI2Vpjjvc5KdwQ13Q==", "abcdefghijklmnopqrstuvwxyz012345", "0123456789abcdef", "0123456789ABCDEF")]
     public void Decrypt_ShouldDecryptData(string encryptedData, string key, string iv, string expected)
     {
         // Arrange

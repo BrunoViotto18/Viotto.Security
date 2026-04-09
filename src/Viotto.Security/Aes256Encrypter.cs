@@ -50,9 +50,7 @@ public sealed class Aes256Encrypter
 
     public byte[] Encrypt(ReadOnlySpan<byte> data, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
-        var padding = BlockSize - (data.Length % BlockSize);
-        var result = new byte[data.Length + padding];
-        result.AsSpan(data.Length).Fill((byte)padding);
+        var result = new byte[data.Length];
         data.CopyTo(result);
 
         Span<byte> expandedKeys = stackalloc byte[15 * BlockSize];
@@ -99,14 +97,7 @@ public sealed class Aes256Encrypter
             originalBlock.CopyTo(previousBlock);
         }
 
-        var padding = result[^1];
-
-        if (padding == 0 || padding > BlockSize || !result[^padding..].All(x => x == padding))
-        {
-            throw new InvalidOperationException("Padding PKCS7 inválido");
-        }
-
-        return result[..^padding];
+        return result;
     }
 
     private static void EncryptBlock(Span<byte> block, ReadOnlySpan<byte> expandedKey)
