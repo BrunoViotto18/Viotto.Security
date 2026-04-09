@@ -100,6 +100,12 @@ public sealed class Aes256Encrypter
         }
 
         var padding = result[^1];
+
+        if (padding == 0 || padding > BlockSize || !result[^padding..].All(x => x == padding))
+        {
+            throw new InvalidOperationException("Padding PKCS7 inválido");
+        }
+
         return result[..^padding];
     }
 
