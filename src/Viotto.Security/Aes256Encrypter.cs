@@ -4,6 +4,8 @@ namespace Viotto.Security;
 
 public sealed class Aes256Encrypter
 {
+    private const byte BlockSize = 16;
+
     private static readonly byte[] SBox = [
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
         0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -48,17 +50,19 @@ public sealed class Aes256Encrypter
 
     public byte[] Encrypt(ReadOnlySpan<byte> data, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
-        var input = new byte[data.Length];
-        data.CopyTo(input);
+        var padding = BlockSize - (data.Length % BlockSize);
+        var result = new byte[data.Length + padding];
+        result.AsSpan(data.Length).Fill((byte)padding);
+        data.CopyTo(result);
 
-        Span<byte> expandedKeys = stackalloc byte[15 * 16];
+        Span<byte> expandedKeys = stackalloc byte[15 * BlockSize];
         ExpandKeys(expandedKeys, key);
 
         var previousBlock = iv;
 
-        for (int i = 0; i < input.Length; i += 16)
+        for (int i = 0; i < result.Length; i += BlockSize)
         {
-            var block = input.AsSpan()[i..(i + 16)];
+            var block = result.AsSpan()[i..(i + BlockSize)];
 
             Xor(block, previousBlock);
 
@@ -67,24 +71,24 @@ public sealed class Aes256Encrypter
             previousBlock = block;
         }
 
-        return input;
+        return result;
     }
 
     public byte[] Decrypt(ReadOnlySpan<byte> data, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
-        var input = new byte[data.Length];
-        data.CopyTo(input);
+        var result = new byte[data.Length];
+        data.CopyTo(result);
 
-        Span<byte> expandedKeys = stackalloc byte[15 * 16];
+        Span<byte> expandedKeys = stackalloc byte[15 * BlockSize];
         ExpandKeys(expandedKeys, key);
 
-        Span<byte> previousBlock = stackalloc byte[16];
+        Span<byte> previousBlock = stackalloc byte[BlockSize];
         iv.CopyTo(previousBlock);
 
-        Span<byte> originalBlock = stackalloc byte[16];
-        for (int i = 0; i < input.Length; i += 16)
+        Span<byte> originalBlock = stackalloc byte[BlockSize];
+        for (int i = 0; i < result.Length; i += BlockSize)
         {
-            var block = input.AsSpan()[i..(i + 16)];
+            var block = result.AsSpan()[i..(i + BlockSize)];
 
             block.CopyTo(originalBlock);
 
@@ -95,12 +99,13 @@ public sealed class Aes256Encrypter
             originalBlock.CopyTo(previousBlock);
         }
 
-        return input;
+        var padding = result[^1];
+        return result[..^padding];
     }
 
     private static void EncryptBlock(Span<byte> block, ReadOnlySpan<byte> expandedKey)
     {
-        var firstKey = expandedKey[..16];
+        var firstKey = expandedKey[..BlockSize];
         Xor(block, firstKey);
 
         for (int round = 1; round < 15; round++)
@@ -113,7 +118,7 @@ public sealed class Aes256Encrypter
                 MixColumns(block);
             }
 
-            var roundKey = expandedKey.Slice(round * 16, 16);
+            var roundKey = expandedKey.Slice(round * BlockSize, BlockSize);
             Xor(block, roundKey);
         }
     }
@@ -122,7 +127,7 @@ public sealed class Aes256Encrypter
     {
         for (int round = 14; round > 0; round--)
         {
-            var roundKey = expandedKey.Slice(round * 16, 16);
+            var roundKey = expandedKey.Slice(round * BlockSize, BlockSize);
             Xor(block, roundKey);
 
             if (round != 14)
@@ -134,7 +139,7 @@ public sealed class Aes256Encrypter
             UnsubBytes(block);
         }
 
-        var firstKey = expandedKey[..16];
+        var firstKey = expandedKey[..BlockSize];
         Xor(block, firstKey);
     }
 
